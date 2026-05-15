@@ -85,15 +85,14 @@ def _(mo, np, plt):
         """Run a plotting callback and return its result plus newly created figures."""
         original_show = plt.show
         plt.show = lambda *args, **kwargs: None
-        previous = set(plt.get_fignums())
+        plt.close("all")
         try:
             result = plotter()
             current = set(plt.get_fignums())
         finally:
             plt.show = original_show
 
-        created = sorted(current - previous)
-        figures = [plt.figure(number) for number in created]
+        figures = [plt.figure(number) for number in sorted(current)]
         return result, figures
 
     def render_figures(figures, columns=1):
@@ -201,7 +200,6 @@ def _(mo):
     )
     single_pixel_run = mo.ui.run_button(label="Recompute single-pixel figures")
 
-    mo.vstack([single_pixel_controls, single_pixel_run], gap=1.0)
     return single_pixel_controls, single_pixel_run
 
 
@@ -309,11 +307,14 @@ def _(
     mo,
     render_figures,
     single_gs_figures,
+    single_pixel_controls,
+    single_pixel_run,
     single_target_figures,
     single_units_figures,
 ):
     mo.vstack(
         [
+            mo.vstack([single_pixel_controls, single_pixel_run], gap=1.0),
             mo.md(
                 r"""
                 ### Single-pixel target and coordinate systems
@@ -383,7 +384,6 @@ def _(mo):
     )
     diffraction_run = mo.ui.run_button(label="Recompute diffraction figures")
 
-    mo.vstack([diffraction_controls, diffraction_run], gap=1.0)
     return diffraction_controls, diffraction_run
 
 
@@ -501,6 +501,8 @@ def _(
 @app.cell
 def _(
     gaussian_figures,
+    diffraction_controls,
+    diffraction_run,
     mo,
     padded_gs_figures,
     padded_shape,
@@ -509,6 +511,7 @@ def _(
 ):
     mo.vstack(
         [
+            mo.vstack([diffraction_controls, diffraction_run], gap=1.0),
             mo.md(f"Zero-padding expands the computational grid to `{tuple(padded_shape)}`."),
             render_figures(padded_target_figures),
             render_figures(padded_gs_figures),
